@@ -7,7 +7,7 @@ package gameserver;
 
 /**
  *
- * @author Stefan
+ * @author Stefan Lederhaas
  */
 public class GameServer {
 
@@ -15,7 +15,7 @@ public class GameServer {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        System.out.println("server not running");
+        
     }
     
 }
