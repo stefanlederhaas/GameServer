@@ -93,12 +93,18 @@ public class Tictactoe extends Gamebase implements Runnable {
 
         public TicTacToePlayer(Socket socket) throws IOException {
             this.socket = socket;
+            
+            System.out.println("S: HostAddr="+socket.getInetAddress().getHostAddress());
+            
             pw = new PrintWriter(socket.getOutputStream());
             br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            pw.println("Hallo vom Server");
+            pw.flush();
         }
 
         public String listen() throws IOException {
             String line = br.readLine();
+            System.out.println("TTTPlayer.liste(): "+ line);
             if (line.contains("keepAlive")) {
                 return "kA";
             }
@@ -122,36 +128,44 @@ public class Tictactoe extends Gamebase implements Runnable {
         @Override
         public void keepAlive() {
             pw.println("keepAlive{}");
+            pw.flush();
+            
         }
 
         @Override
         public void hasWon() {
             pw.println("hasWon{}");
+            pw.flush();
         }
 
         @Override
         public void hasDrawn() {
             pw.println("hasDrawn{}");
+            pw.flush();
         }
 
         @Override
         public void playerSet(int r, int c) {
             pw.printf("playerSet{%d,%d}\n", r, c);
+            pw.flush();
         }
 
         @Override
         public void makeTurn() {
             pw.println("makeTurn{}");
+            pw.flush();
         }
 
         @Override
         public void sendMessage(String msg) {
             pw.println("message{" + msg + "}");
+            pw.flush();
         }
 
         @Override
         public void hasLost() {
             pw.println("hasLost{}");
+            pw.flush();
         }
 
     }
@@ -176,10 +190,14 @@ public class Tictactoe extends Gamebase implements Runnable {
             Gamelogic gamelogic = new Gamelogic();
             socket = new ServerSocket(port);
             while (playerCount != 2) {
+                System.out.println("S: waiting for players");
                 client = socket.accept();
                 TicTacToePlayer p = new TicTacToePlayer(client);
                 player.add(p);
+                playerCount++;
             }
+            
+            System.out.println("S: Players successfully connected");
 
             //Start Game
             player.get(0).sendMessage("You are X");
@@ -189,13 +207,15 @@ public class Tictactoe extends Gamebase implements Runnable {
 
             TicTacToePlayer p1 = player.get(0);
             TicTacToePlayer p2 = player.get(1);
-
+            
             do {
+                
                 int r = 0, c = 0;
                 String l = "";
                 if (i > 0) {
                     p1.makeTurn();
                     l = p1.listen();
+                    
                     switch (l) {
                         case "kA":
                             i *= -1;
@@ -204,6 +224,7 @@ public class Tictactoe extends Gamebase implements Runnable {
                             running = false;
                             break;
                         case "ERR":
+                            
                             running = false;
                             p2.sendMessage("ERROR DURING GAME");
                             break;
@@ -245,6 +266,8 @@ public class Tictactoe extends Gamebase implements Runnable {
                         }
                     }
                 }
+                
+             
 
                 boolean p1w = gamelogic.hasWon(p1.getNumber());
                 boolean p2w = gamelogic.hasWon(p2.getNumber());
@@ -265,14 +288,17 @@ public class Tictactoe extends Gamebase implements Runnable {
                 }
 
                 if (running) {
+                    
                     p1.keepAlive();
                     p2.keepAlive();
                 }
 
+                System.out.println("S: running = "+running);
                 i *= -1;
+                
             } while (running);
         } catch (IOException ex) {
-
+            System.out.println(ex.toString());
         }
 
     }
