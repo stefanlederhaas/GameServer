@@ -13,7 +13,6 @@ import java.util.LinkedList;
  */
 public abstract class Gamebase {
     
-    public abstract boolean CreateGameSession(String ip,int port);
     
     public abstract String listen();
     
