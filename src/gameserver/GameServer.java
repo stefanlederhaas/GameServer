@@ -5,15 +5,10 @@
  */
 package gameserver;
 
-/**
- *
- * @author Stefan Lederhaas
- */
+
 public class GameServer {
 
-    /**
-     * @param args the command line arguments
-     */
+   
     public static void main(String[] args) {
         
     }
