@@ -6,158 +6,275 @@
 package gameserver.TicTacToe;
 
 import gameserver.Gamebase;
-import gameserver.User;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.InetAddress;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.LinkedList;
 
 /**
  *
  * @author Stefan
  */
-public class Tictactoe extends Gamebase implements Runnable{
-        
-        private User u1;
-        private User u2;
-        
-    class Gamelogic{
-        
+public class Tictactoe extends Gamebase implements Runnable {
+
+    class Gamelogic {
+
         private byte[][] field = new byte[3][3];
-        private User u1;
-        private User u2;
-        
-        public Gamelogic(User u1,User u2)
-        {
+
+        public Gamelogic() {
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
-                    field[i][j] = 0;       
-                } 
-            }
-            
-         this.u1 = u1;
-         this.u2 = u2;
-        }
-        
-        public boolean isSetPossible(int row,int col)
-        {   
-            return field[row][col]==0;
-        }
-        
-        public User hasWon()
-        {
-            for (int i = 0; i < 3; i++) {
-                int summ = (field[i][0]+field[i][1]+field[i][2]);
-                
-                if(summ==3)
-                {
-                    return u1;
+                    field[i][j] = 0;
                 }
-                else if(summ==-3)
-                {
-                    return u2;
-                }
-            }
-            
-            for (int i = 0; i < 3; i++) {
-                int summ = (field[0][i]+field[1][i]+field[2][i]);
-                
-                if(summ==3)
-                {
-                    return u1;
-                }
-                else if(summ==-3)
-                {
-                    return u2;
-                }
-            }
-            
-            if(field[0][0]+field[1][1]+field[2][2] == 3)
-            {
-                return u1;
-            }
-            else if(field[0][0]+field[1][1]+field[2][2] == -3)
-            {
-                return u2;
-            }
-            
-            if(field[0][2]+field[1][1]+field[2][0] == 3)
-            {
-                return u1;
-            }
-            else if(field[0][0]+field[1][1]+field[2][2] == -3)
-            {
-                return u2;
             }
 
-              return null;      
-            
         }
-        
-        private boolean isAllSet()
-        {
+
+        public void set(int r, int c, int p) {
+            field[r][c] = (byte) p;
+        }
+
+        public boolean isSetPossible(int row, int col) {
+            return field[row][col] == 0;
+        }
+
+        public boolean hasWon(int player) {
+            for (int i = 0; i < 3; i++) {
+                int summ = (field[i][0] + field[i][1] + field[i][2]);
+
+                if ((summ / 3) == player) {
+                    return true;
+                }
+            }
+
+            for (int i = 0; i < 3; i++) {
+                int summ = (field[0][i] + field[1][i] + field[2][i]);
+
+                if ((summ / 3) == player) {
+                    return true;
+                }
+            }
+
+            if ((field[0][0] + field[1][1] + field[2][2]) / 3 == player) {
+                return true;
+            }
+
+            if ((field[0][2] + field[1][1] + field[2][0]) / 3 == player) {
+                return true;
+            }
+
+            return false;
+
+        }
+
+        private boolean isAllSet() {
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
-                    if(field[i][j] == 0)
-                        return false;    
-                } 
+                    if (field[i][j] == 0) {
+                        return false;
+                    }
+                }
             }
-            
+
             return true;
         }
     }
-    
-    
+
+    class TicTacToePlayer implements CommandsToPlayer {
+
+        protected Socket socket;
+        private PrintWriter pw;
+        private int number;
+        private BufferedReader br;
+
+        public TicTacToePlayer(Socket socket) throws IOException {
+            this.socket = socket;
+            pw = new PrintWriter(socket.getOutputStream());
+            br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        }
+
+        public String listen() throws IOException {
+            String line = br.readLine();
+            if (line.contains("keepAlive")) {
+                return "kA";
+            }
+            if (line.contains("quit")) {
+                return "q";
+            }
+            if (line.contains("set")) {
+                return line;
+            }
+            return "ERR";
+        }
+
+        public void setNumber(int number) {
+            this.number = number;
+        }
+
+        public int getNumber() {
+            return number;
+        }
+
+        @Override
+        public void keepAlive() {
+            pw.println("keepAlive{}");
+        }
+
+        @Override
+        public void hasWon() {
+            pw.println("hasWon{}");
+        }
+
+        @Override
+        public void hasDrawn() {
+            pw.println("hasDrawn{}");
+        }
+
+        @Override
+        public void playerSet(int r, int c) {
+            pw.printf("playerSet{%d,%d}\n", r, c);
+        }
+
+        @Override
+        public void makeTurn() {
+            pw.println("makeTurn{}");
+        }
+
+        @Override
+        public void sendMessage(String msg) {
+            pw.println("message{" + msg + "}");
+        }
+
+        @Override
+        public void hasLost() {
+            pw.println("hasLost{}");
+        }
+
+    }
+
     private ServerSocket socket;
-    private boolean isGameRunning;
-    private Socket cs1,cs2;
-    
-    public Tictactoe(int port,InetAddress bindingAddress) throws IOException
-    {
-        socket = new ServerSocket(port,2,bindingAddress);
-        isGameRunning = true;
-    }
-    
-    
+    private Socket client;
+    private int port;
+    private final int player1 = 1;
+    private final int player2 = -1;
 
-    @Override
-    public String listen() {
-     
-      return null;
-    }
-
-    @Override
-    public void answer(String answer) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean addUser(User u) {
-        if(u1==null)
-        {
-            u1 = u;
-            return true;
-        }
-        else if(u2==null)
-        {
-            u2 = u;
-            return true;
-        }
-        
-        return false;
-        
+    public Tictactoe(int port) throws IOException {
+        this.port = port;
     }
 
     @Override
     public void run() {
-        do
-        {
-           String str = listen();  
-            
-            
-            
-        }while(isGameRunning);
-        
+        LinkedList<TicTacToePlayer> player = new LinkedList<>();
+        int playerCount = 0;
+        boolean running = true;
+        int i = 1;
+        try {
+            Gamelogic gamelogic = new Gamelogic();
+            socket = new ServerSocket(port);
+            while (playerCount != 2) {
+                client = socket.accept();
+                TicTacToePlayer p = new TicTacToePlayer(client);
+                player.add(p);
+            }
+
+            //Start Game
+            player.get(0).sendMessage("You are X");
+            player.get(0).setNumber(1);
+            player.get(1).sendMessage("You are O");
+            player.get(1).setNumber(-1);
+
+            TicTacToePlayer p1 = player.get(0);
+            TicTacToePlayer p2 = player.get(1);
+
+            do {
+                int r = 0, c = 0;
+                String l = "";
+                if (i > 0) {
+                    p1.makeTurn();
+                    l = p1.listen();
+                    switch (l) {
+                        case "kA":
+                            i *= -1;
+                            break;
+                        case "q":
+                            running = false;
+                            break;
+                        case "ERR":
+                            running = false;
+                            p2.sendMessage("ERROR DURING GAME");
+                            break;
+                        default: {
+
+                            String[] s = l.split("{");
+                            s = s[1].split("}");
+                            s = s[0].split(",");
+                            r = Integer.parseInt(s[0]);
+                            c = Integer.parseInt(s[1]);
+
+                            gamelogic.set(r, c, p1.getNumber());
+                        }
+                    }
+
+                } else {
+                    p2.makeTurn();
+                    l = p2.listen();
+                    switch (l) {
+                        case "kA":
+                            i *= -1;
+                            break;
+                        case "q":
+                            running = false;
+                            break;
+                        case "ERR":
+                            running = false;
+                            p1.sendMessage("ERROR DURING GAME");
+                            break;
+                        default: {
+
+                            String[] s = l.split("{");
+                            s = s[1].split("}");
+                            s = s[0].split(",");
+                            r = Integer.parseInt(s[0]);
+                            c = Integer.parseInt(s[1]);
+
+                            gamelogic.set(r, c, p2.getNumber());
+                        }
+                    }
+                }
+
+                boolean p1w = gamelogic.hasWon(p1.getNumber());
+                boolean p2w = gamelogic.hasWon(p2.getNumber());
+                if (p1w) {
+                    p1.hasWon();
+                    p2.hasLost();
+                    running = false;
+                }
+                if (p2w) {
+                    p2.hasWon();
+                    p1.hasLost();
+                    running = false;
+                }
+                if (!p1w && !p2w && gamelogic.isAllSet()) {
+                    p1.hasDrawn();
+                    p2.hasDrawn();
+                    running = false;
+                }
+
+                if (running) {
+                    p1.keepAlive();
+                    p2.keepAlive();
+                }
+
+                i *= -1;
+            } while (running);
+        } catch (IOException ex) {
+
+        }
+
     }
-    
+
 }

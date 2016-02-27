@@ -14,12 +14,5 @@ import java.util.LinkedList;
 public abstract class Gamebase {
     
     
-    public abstract String listen();
-    
-    public abstract void answer(String answer);
-    
-    public abstract boolean addUser(User u);
-    
-    
     
 }

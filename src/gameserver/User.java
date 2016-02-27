@@ -8,7 +8,7 @@ package gameserver;
 import java.net.InetAddress;
 
 /**
- *
+ * FOR FURTHER USAGE - CURRENTLY NOT USED
  * @author Stefan
  */
 public class User {
