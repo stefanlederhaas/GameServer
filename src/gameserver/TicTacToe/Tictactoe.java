@@ -15,7 +15,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.LinkedList;
-import java.util.logging.Level;
 
 /**
  *
@@ -23,18 +22,16 @@ import java.util.logging.Level;
  */
 public class Tictactoe implements Runnable, Gamebase {
 
-    private LinkedList<TicTacToePlayer> player = new LinkedList<>();
+    private final LinkedList<TicTacToePlayer> player = new LinkedList<>();
+    private final int port;
+    private final Logger logger;
     private ServerSocket socket;
     private Socket client;
-    private int port;
-    private Logger logger;
 
-    public Tictactoe(int port) {
+    public Tictactoe(int port) throws IOException {
         this.port = port;
-        try {
-            logger = new Logger(this);
-        } catch (IOException ex) {            
-        }
+        logger = new Logger(this);
+
     }
 
     int playerCount = 0;
@@ -45,14 +42,14 @@ public class Tictactoe implements Runnable, Gamebase {
     @Override
     public void run() {
 
-        boolean inter=false;
+        boolean inter = false;
         int i = 1;
         try {
             Gamelogic gamelogic = new Gamelogic();
             socket = new ServerSocket(port);
 
-            logger.log("Players successfully connected");
-
+            //Timeout for accept. if timout is reached a SocketTimeoutException will be thrown and therefore
+            //the loop will continue as the condition says and it's possible to interrupt the server at runtime
             socket.setSoTimeout(500);
             while (playerCount != 2 && !inter) {
 
@@ -63,13 +60,15 @@ public class Tictactoe implements Runnable, Gamebase {
                     player.add(p);
                     playerCount++;
                 } catch (SocketTimeoutException sex) {
-                    //continue;
-                    if(Thread.interrupted())
+                    //if an interrupt occurs make the server stop by setting the boolean inter to true
+                    if (Thread.interrupted()) {
                         inter = true;
+                    }
                 }
             }
-            if(inter)
-            {
+
+            //if an interrupt occured exit this method
+            if (inter) {
                 return;
             }
 
@@ -83,6 +82,7 @@ public class Tictactoe implements Runnable, Gamebase {
                 p1 = player.get(0);
                 p2 = player.get(1);
             }
+            logger.log("Players successfully connected");
 
             while (running && !Thread.interrupted()) {
 
