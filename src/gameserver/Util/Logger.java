@@ -23,10 +23,11 @@ public class Logger {
     public Logger(Gamebase server) throws IOException
     {
         
-        File f = new File(path+File.pathSeparator+server.getServerName());
+        File f = new File(path+File.separator+server.getServerName());
+        System.out.println(f.getAbsolutePath());
         if(!f.exists())
             f.createNewFile();
-        bw = new BufferedWriter(new FileWriter(f));
+        bw = new BufferedWriter(new FileWriter(f, true));
     }
     
     public void close() throws IOException

@@ -37,7 +37,10 @@ public class GameServer {
         System.out.println("4) Texas Hold'em");
         System.out.println("5) sixty-six");
         System.out.print("Your choice: ");
-        b = new Scanner(System.in).nextByte();
+        Scanner scan = new Scanner(System.in);
+        while (!scan.hasNextByte()) {
+        }
+        b = scan.nextByte();
         do {
             if (i != 0) {
                 nextFreePort++;
@@ -86,7 +89,10 @@ public class GameServer {
         System.out.println("4) Kill'em all");
         System.out.println("5) Safe exit");
         System.out.print("Your choice: ");
-        return new Scanner(System.in).nextByte();
+        Scanner scan = new Scanner(System.in);
+        while (!scan.hasNextByte()) {
+        }
+        return scan.nextByte();
 
     }
 
