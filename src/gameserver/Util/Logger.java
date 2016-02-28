@@ -17,19 +17,27 @@ import java.io.IOException;
  */
 public class Logger {
     
-    BufferedWriter bw;
+    private BufferedWriter bw;
+    private final String path = System.getProperty("user.dir");
     
     public Logger(Gamebase server) throws IOException
     {
-        File f = new File("Logs/"+server.getServerName());
+        
+        File f = new File(path+File.pathSeparator+server.getServerName());
         if(!f.exists())
             f.createNewFile();
         bw = new BufferedWriter(new FileWriter(f));
     }
     
+    public void close() throws IOException
+    {
+        bw.close();
+    }
+    
     public void log(String s) throws IOException
     {
         bw.write(s);
+        bw.newLine();
         bw.flush();
     }
     

@@ -18,7 +18,7 @@ public class GameServer {
 
     public void clear() throws IOException {
         System.out.print("\033[H\033[2J");
-
+        System.out.flush();
     }
 
     public boolean isRunning() {
@@ -45,20 +45,18 @@ public class GameServer {
             i++;
         } while (games.containsKey(new Integer(nextFreePort)));
 
-       
-        
         switch (b) {
             case 1:
                 Thread t = new Thread(new Tictactoe(nextFreePort));
                 t.start();
                 games.put(new Integer(nextFreePort), t);
-                System.out.println("TicTacToe started at: "+nextFreePort);
+                System.out.println("TicTacToe started at: " + nextFreePort);
                 break;
             default:
 
         }
         nextFreePort++;
-        
+
     }
 
     public void manageGame() {
@@ -74,6 +72,9 @@ public class GameServer {
     }
 
     public void exit() {
+        for (Thread t : games.values()) {
+            t.interrupt();
+        }
         running = false;
     }
 
@@ -94,7 +95,7 @@ public class GameServer {
         do {
             try {
 
-                //server.clear();
+                server.clear();
                 byte b = server.printMainMenu();
                 switch (b) {
                     case 1:
