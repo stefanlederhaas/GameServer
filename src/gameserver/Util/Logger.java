@@ -24,7 +24,7 @@ public class Logger {
     {
         
         File f = new File(path+File.separator+server.getServerName());
-        System.out.println(f.getAbsolutePath());
+    
         if(!f.exists())
             f.createNewFile();
         bw = new BufferedWriter(new FileWriter(f, true));
