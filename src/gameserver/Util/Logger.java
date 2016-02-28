@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package gameserver;
+package gameserver.Util;
 
+import gameserver.MainServer.Gamebase;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;

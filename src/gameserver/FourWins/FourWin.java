@@ -5,8 +5,8 @@
  */
 package gameserver.FourWins;
 
-import gameserver.Gamebase;
-import gameserver.Logger;
+import gameserver.MainServer.Gamebase;
+import gameserver.Util.Logger;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

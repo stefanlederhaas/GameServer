@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package gameserver;
+package gameserver.MainServer;
 
 import gameserver.TicTacToe.Tictactoe;
 import java.io.IOException;
