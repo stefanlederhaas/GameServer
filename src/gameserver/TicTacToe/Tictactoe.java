@@ -6,9 +6,9 @@
 package gameserver.TicTacToe;
 
 import gameserver.Gamebase;
+import gameserver.Logger;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -19,8 +19,147 @@ import java.util.LinkedList;
  *
  * @author Stefan
  */
-public class Tictactoe extends Gamebase implements Runnable {
+public class Tictactoe implements Runnable, Gamebase {
 
+    private LinkedList<TicTacToePlayer> player = new LinkedList<>();
+    private ServerSocket socket;
+    private Socket client;
+    private int port;
+    private Logger logger;
+
+    public Tictactoe(int port) throws IOException {
+        this.port = port;
+        logger = new Logger(this);
+    }
+
+    @Override
+    public void run() {
+        int playerCount = 0;
+        boolean running = true;
+        int i = 1;
+        try {
+            Gamelogic gamelogic = new Gamelogic();
+            socket = new ServerSocket(port);
+            while (playerCount != 2) {
+                logger.log("Waiting for players");
+                client = socket.accept();
+                TicTacToePlayer p = new TicTacToePlayer(client);
+                player.add(p);
+                playerCount++;
+            }
+
+            logger.log("Players successfully connected");
+
+            //Start Game
+            player.get(0).sendMessage("You are X");
+            player.get(0).setNumber(1);
+            player.get(1).sendMessage("You are O");
+            player.get(1).setNumber(-1);
+
+            TicTacToePlayer p1 = player.get(0);
+            TicTacToePlayer p2 = player.get(1);
+
+            do {
+
+                int r = 0, c = 0;
+                String l = "";
+                if (i > 0) {
+                    p1.makeTurn();
+                    l = p1.listen();
+
+                    switch (l) {
+                        case "kA":
+                            i *= -1;
+                            break;
+                        case "q":
+                            running = false;
+                            break;
+                        case "ERR":
+
+                            running = false;
+                            p2.sendMessage("ERROR DURING GAME");
+                            break;
+                        default: {
+
+                            String[] s = l.split("{");
+                            s = s[1].split("}");
+                            s = s[0].split(",");
+                            r = Integer.parseInt(s[0]);
+                            c = Integer.parseInt(s[1]);
+
+                            gamelogic.set(r, c, p1.getNumber());
+                        }
+                    }
+
+                } else {
+                    p2.makeTurn();
+                    l = p2.listen();
+                    switch (l) {
+                        case "kA":
+                            i *= -1;
+                            break;
+                        case "q":
+                            running = false;
+                            break;
+                        case "ERR":
+                            running = false;
+                            p1.sendMessage("ERROR DURING GAME");
+                            break;
+                        default: {
+
+                            String[] s = l.split("{");
+                            s = s[1].split("}");
+                            s = s[0].split(",");
+                            r = Integer.parseInt(s[0]);
+                            c = Integer.parseInt(s[1]);
+
+                            gamelogic.set(r, c, p2.getNumber());
+                        }
+                    }
+                }
+
+                boolean p1w = gamelogic.hasWon(p1.getNumber());
+                boolean p2w = gamelogic.hasWon(p2.getNumber());
+                if (p1w) {
+                    p1.hasWon();
+                    p2.hasLost();
+                    running = false;
+                }
+                if (p2w) {
+                    p2.hasWon();
+                    p1.hasLost();
+                    running = false;
+                }
+                if (!p1w && !p2w && gamelogic.isAllSet()) {
+                    p1.hasDrawn();
+                    p2.hasDrawn();
+                    running = false;
+                }
+
+                if (running) {
+
+                    p1.keepAlive();
+                    p2.keepAlive();
+                }
+
+                logger.log("running = " + running);
+                i *= -1;
+
+            } while (running);
+        } catch (IOException ex) {
+            try {
+                logger.log(ex.toString());
+            } catch (IOException ex1) {
+            }
+        }
+
+    }
+
+    @Override
+    public String getServerName() {
+        return "TicTacToe_at_"+port;
+    }
+    
     class Gamelogic {
 
         private byte[][] field = new byte[3][3];
@@ -92,19 +231,16 @@ public class Tictactoe extends Gamebase implements Runnable {
         private BufferedReader br;
 
         public TicTacToePlayer(Socket socket) throws IOException {
-            this.socket = socket;
-            
-            System.out.println("S: HostAddr="+socket.getInetAddress().getHostAddress());
-            
+            this.socket = socket;            
+            logger.log("HostAddr=" + socket.getInetAddress().getHostAddress());
             pw = new PrintWriter(socket.getOutputStream());
             br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            pw.println("Hallo vom Server");
             pw.flush();
         }
 
         public String listen() throws IOException {
             String line = br.readLine();
-            System.out.println("TTTPlayer.liste(): "+ line);
+            
             if (line.contains("keepAlive")) {
                 return "kA";
             }
@@ -129,7 +265,7 @@ public class Tictactoe extends Gamebase implements Runnable {
         public void keepAlive() {
             pw.println("keepAlive{}");
             pw.flush();
-            
+
         }
 
         @Override
@@ -170,137 +306,5 @@ public class Tictactoe extends Gamebase implements Runnable {
 
     }
 
-    private ServerSocket socket;
-    private Socket client;
-    private int port;
-    private final int player1 = 1;
-    private final int player2 = -1;
-
-    public Tictactoe(int port) throws IOException {
-        this.port = port;
-    }
-
-    @Override
-    public void run() {
-        LinkedList<TicTacToePlayer> player = new LinkedList<>();
-        int playerCount = 0;
-        boolean running = true;
-        int i = 1;
-        try {
-            Gamelogic gamelogic = new Gamelogic();
-            socket = new ServerSocket(port);
-            while (playerCount != 2) {
-                System.out.println("S: waiting for players");
-                client = socket.accept();
-                TicTacToePlayer p = new TicTacToePlayer(client);
-                player.add(p);
-                playerCount++;
-            }
-            
-            System.out.println("S: Players successfully connected");
-
-            //Start Game
-            player.get(0).sendMessage("You are X");
-            player.get(0).setNumber(1);
-            player.get(1).sendMessage("You are O");
-            player.get(1).setNumber(-1);
-
-            TicTacToePlayer p1 = player.get(0);
-            TicTacToePlayer p2 = player.get(1);
-            
-            do {
-                
-                int r = 0, c = 0;
-                String l = "";
-                if (i > 0) {
-                    p1.makeTurn();
-                    l = p1.listen();
-                    
-                    switch (l) {
-                        case "kA":
-                            i *= -1;
-                            break;
-                        case "q":
-                            running = false;
-                            break;
-                        case "ERR":
-                            
-                            running = false;
-                            p2.sendMessage("ERROR DURING GAME");
-                            break;
-                        default: {
-
-                            String[] s = l.split("{");
-                            s = s[1].split("}");
-                            s = s[0].split(",");
-                            r = Integer.parseInt(s[0]);
-                            c = Integer.parseInt(s[1]);
-
-                            gamelogic.set(r, c, p1.getNumber());
-                        }
-                    }
-
-                } else {
-                    p2.makeTurn();
-                    l = p2.listen();
-                    switch (l) {
-                        case "kA":
-                            i *= -1;
-                            break;
-                        case "q":
-                            running = false;
-                            break;
-                        case "ERR":
-                            running = false;
-                            p1.sendMessage("ERROR DURING GAME");
-                            break;
-                        default: {
-
-                            String[] s = l.split("{");
-                            s = s[1].split("}");
-                            s = s[0].split(",");
-                            r = Integer.parseInt(s[0]);
-                            c = Integer.parseInt(s[1]);
-
-                            gamelogic.set(r, c, p2.getNumber());
-                        }
-                    }
-                }
-                
-             
-
-                boolean p1w = gamelogic.hasWon(p1.getNumber());
-                boolean p2w = gamelogic.hasWon(p2.getNumber());
-                if (p1w) {
-                    p1.hasWon();
-                    p2.hasLost();
-                    running = false;
-                }
-                if (p2w) {
-                    p2.hasWon();
-                    p1.hasLost();
-                    running = false;
-                }
-                if (!p1w && !p2w && gamelogic.isAllSet()) {
-                    p1.hasDrawn();
-                    p2.hasDrawn();
-                    running = false;
-                }
-
-                if (running) {
-                    
-                    p1.keepAlive();
-                    p2.keepAlive();
-                }
-
-                System.out.println("S: running = "+running);
-                i *= -1;
-                
-            } while (running);
-        } catch (IOException ex) {
-            System.out.println(ex.toString());
-        }
-
-    }
 
 }

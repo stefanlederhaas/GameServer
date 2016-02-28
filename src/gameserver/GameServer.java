@@ -5,58 +5,79 @@
  */
 package gameserver;
 
-import java.io.Console;
+import gameserver.TicTacToe.Tictactoe;
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.Scanner;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 
 public class GameServer {
 
-    private boolean running=true;
-    private LinkedList<Thread> games = new LinkedList<>();
-    
-    public void clear() throws IOException
-    {
-        System.out.print("\033[H\033[2J"); 
-       
+    private int nextFreePort = 5000;
+    private boolean running = true;
+    private HashMap<Integer, Thread> games = new HashMap<>();
+
+    public void clear() throws IOException {
+        System.out.print("\033[H\033[2J");
+
     }
 
     public boolean isRunning() {
         return running;
     }
-    
-   
-    public void createGame()
-    {
-        System.out.println("New Game");
+
+    public void createGame() throws IOException {
+        byte b = 0;
+        int i = 0;
+
+        clear();
+        System.out.println("Which would you like to start?");
+        System.out.println("1) TicTacToe");
+        System.out.println("2) 4 Wins");
+        System.out.println("3) Black Jack");
+        System.out.println("4) Texas Hold'em");
+        System.out.println("5) sixty-six");
+        System.out.print("Your choice: ");
+        b = new Scanner(System.in).nextByte();
+        do {
+            if (i != 0) {
+                nextFreePort++;
+            }
+            i++;
+        } while (games.containsKey(new Integer(nextFreePort)));
+
+       
+        
+        switch (b) {
+            case 1:
+                Thread t = new Thread(new Tictactoe(nextFreePort));
+                t.start();
+                games.put(new Integer(nextFreePort), t);
+                System.out.println("TicTacToe started at: "+nextFreePort);
+                break;
+            default:
+
+        }
+        nextFreePort++;
+        
     }
-    
-    public void manageGame()
-    {
+
+    public void manageGame() {
         System.out.println("MG");
     }
-    
-    public void stopServer_S()
-    {
+
+    public void stopServer_S() {
         System.out.println("SS");
     }
-    
-    public void killAll()
-    {
+
+    public void killAll() {
         running = false;
     }
-    
-    public void exit()
-    {
+
+    public void exit() {
         running = false;
     }
-    
-    public byte printMainMenu()
-    {
+
+    public byte printMainMenu() {
         System.out.println("What would you wish to do?");
         System.out.println("1) Create new game");
         System.out.println("2) Manage Running game");
@@ -65,18 +86,17 @@ public class GameServer {
         System.out.println("5) Safe exit");
         System.out.print("Your choice: ");
         return new Scanner(System.in).nextByte();
-        
+
     }
-    
+
     public static void main(String[] args) {
         GameServer server = new GameServer();
-        do{
+        do {
             try {
-                
-                server.clear();
+
+                //server.clear();
                 byte b = server.printMainMenu();
-                switch(b)
-                {
+                switch (b) {
                     case 1:
                         server.createGame();
                         break;
@@ -92,13 +112,13 @@ public class GameServer {
                     case 5:
                         server.exit();
                         break;
-                        
+
                 }
             } catch (IOException ex) {
                 System.out.println("Clear didn't wort exiting now");
             }
-            
-        }while(server.isRunning());
+
+        } while (server.isRunning());
     }
-    
+
 }

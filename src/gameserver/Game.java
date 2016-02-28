@@ -5,14 +5,16 @@
  */
 package gameserver;
 
+import gameserver.TicTacToe.Tictactoe;
+
 /**
  *
  * @author Stefan Lederhaas
  */
 public enum Game {
-    TexasHold,
-    FourWins,
-    TicTacToe,
-    BlackJack,
-    SixtySix
+    TexasHold(),
+    FourWins(),
+    TicTacToe(),
+    BlackJack(),
+    SixtySix();
 }

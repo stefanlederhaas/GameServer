@@ -11,8 +11,6 @@ import java.util.LinkedList;
  *
  * @author Stefan
  */
-public abstract class Gamebase {
-    
-    
-    
+public interface Gamebase {
+    public String getServerName();
 }
