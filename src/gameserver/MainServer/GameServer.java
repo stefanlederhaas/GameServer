@@ -64,6 +64,18 @@ public class GameServer {
 
     public void manageGame() {
         System.out.println("MG");
+        if(games!=null)
+        {
+            for(int i = 0;i<games.size();i++)
+            {
+                System.out.println(games.get(5001).getId()+": "+games.get(5001).getName());
+            }
+        }
+        else
+        {
+            System.out.println("There are currently no Games running!");
+        }
+        
     }
 
     public void stopServer_S() {
