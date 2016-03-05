@@ -20,7 +20,7 @@ import java.util.LinkedList;
  *
  * @author Stefan
  */
-public class Tictactoe implements Runnable, Gamebase {
+public class Tictactoe implements  Gamebase {
 
     private final LinkedList<TicTacToePlayer> player = new LinkedList<>();
     private final int port;
@@ -161,11 +161,9 @@ public class Tictactoe implements Runnable, Gamebase {
                     running = false;
                 }
 
-                if (running) {
-
-                    p1.keepAlive();
-                    p2.keepAlive();
-                }
+                /*  if (running) {
+                    
+                }*/
 
                 logger.log("running = " + running);
                 i *= -1;
@@ -270,14 +268,13 @@ public class Tictactoe implements Runnable, Gamebase {
             pw = new PrintWriter(socket.getOutputStream());
             br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             pw.flush();
+            
         }
 
         public String listen() throws IOException {
             String line = br.readLine();
 
-            if (line.contains("keepAlive")) {
-                return "kA";
-            }
+           
             if (line.contains("quit")) {
                 return "q";
             }
@@ -295,12 +292,7 @@ public class Tictactoe implements Runnable, Gamebase {
             return number;
         }
 
-        @Override
-        public void keepAlive() {
-            pw.println("keepAlive{}");
-            pw.flush();
-
-        }
+      
 
         @Override
         public void hasWon() {

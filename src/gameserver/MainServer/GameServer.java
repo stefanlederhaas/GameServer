@@ -14,7 +14,8 @@ public class GameServer {
 
     private int nextFreePort = 5000;
     private boolean running = true;
-    private HashMap<Integer, Thread> games = new HashMap<>();
+    private HashMap<Integer, Thread> gameThreads = new HashMap<>();
+    private HashMap<Integer, Gamebase> games = new HashMap<>();
 
     public void clear() throws IOException {
         System.out.print("\033[H\033[2J");
@@ -46,13 +47,15 @@ public class GameServer {
                 nextFreePort++;
             }
             i++;
-        } while (games.containsKey(new Integer(nextFreePort)));
+        } while (gameThreads.containsKey(nextFreePort));
 
         switch (b) {
             case 1:
-                Thread t = new Thread(new Tictactoe(nextFreePort));
+                Tictactoe ttt = new Tictactoe(nextFreePort);
+                Thread t = new Thread(ttt);
                 t.start();
-                games.put(new Integer(nextFreePort), t);
+                gameThreads.put(nextFreePort, t);
+                games.put(nextFreePort, ttt);
                 System.out.println("TicTacToe started at: " + nextFreePort);
                 break;
             default:
@@ -63,12 +66,11 @@ public class GameServer {
     }
 
     public void manageGame() {
-        System.out.println("MG");
-        if(games!=null)
+
+        if(!games.isEmpty())
         {
-            for(int i = 0;i<games.size();i++)
-            {
-                System.out.println(games.get(5001).getId()+": "+games.get(5001).getName());
+            for (Gamebase value : games.values()) {
+                System.out.println(""+value.getServerName());
             }
         }
         else
@@ -87,7 +89,7 @@ public class GameServer {
     }
 
     public void exit() {
-        for (Thread t : games.values()) {
+        for (Thread t : gameThreads.values()) {
             t.interrupt();
         }
         running = false;

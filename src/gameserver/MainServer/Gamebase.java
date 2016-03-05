@@ -11,6 +11,6 @@ import java.util.LinkedList;
  *
  * @author Stefan
  */
-public interface Gamebase {
+public interface Gamebase extends Runnable{
     public String getServerName();
 }

@@ -10,7 +10,7 @@ package gameserver.TicTacToe;
  * @author Stefan
  */
 public interface CommandsToPlayer {
-    public void keepAlive();
+    
     public void hasWon();
     public void hasLost();
     public void hasDrawn();
